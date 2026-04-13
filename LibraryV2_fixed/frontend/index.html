@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>LMS — Library Management System</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --blue:#954a9e;--blue2:#863c92;--blue-light:#eff6ff;--blue-mid:#dbeafe;
+  --sidebar:#82358d;--sidebar2:#e0c0e2;--sidebar-text:rgba(255,255,255,.75);
+  --bg:#f0f4f8;--card:#fff;--ink:#1e293b;--ink2:#475569;--ink3:#94a3b8;
+  --border:#e2e8f0;--success:#16a34a;--danger:#d3b2cd;--warning:#d97706;
+  --sh:0 1px 3px rgba(0,0,0,.08),0 4px 16px rgba(0,0,0,.06);
+  --sh2:0 8px 32px rgba(0,0,0,.12);
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+input,select,textarea{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:.88rem;color:var(--ink);background:#fff;outline:none;transition:border-color .2s,box-shadow .2s}
+input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+label{display:block;font-size:.8rem;font-weight:600;color:var(--ink2);margin-bottom:5px}
+.fg{margin-bottom:14px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 20px;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:.87rem;font-weight:600;cursor:pointer;transition:all .18s}
+.btn-blue{background:var(--blue);color:#fff;width:100%}
+.btn-blue:hover{background:var(--blue2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(37,99,235,.3)}
+.btn-sm{padding:7px 16px;font-size:.8rem;width:auto}
+.btn-outline{background:#fff;border:1.5px solid var(--border);color:var(--ink2)}
+.btn-outline:hover{border-color:var(--blue);color:var(--blue)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-danger:hover{background:#dfc2e0}
+.btn-success{background:var(--success);color:#fff}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:.72rem;font-weight:600}
+.b-blue{background:var(--blue-mid);color:var(--blue2)}
+.b-green{background:#dcfce7;color:#15803d}
+.b-red{background:#fee2e2;color:#dc2626}
+.b-yellow{background:#fef3c7;color:#92400e}
+.b-gray{background:#f1f5f9;color:#64748b}
+.toast-box{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{padding:11px 18px;border-radius:8px;font-size:.84rem;font-weight:500;animation:tIn .25s ease;box-shadow:var(--sh2)}
+.ts{background:#dcfce7;color:#15803d;border:1px solid #bbf7d0}
+.te{background:#fee2e2;color:#dc2626;border:1px solid #fecaca}
+.ti{background:#dbeafe;color:#752489;border:1px solid #bfdbfe}
+@keyframes tIn{from{transform:translateX(60px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* ── AUTH ── */
+#authPage{display:none;min-height:100vh;background:#1a2a3a;align-items:center;justify-content:center}
+#authPage.on{display:flex;gap:0}
+.auth-split{display:grid;grid-template-columns:1fr 1fr;width:100%;min-height:100vh}
+.auth-left{background:linear-gradient(135deg,#811fa8,#883dad);display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:64px 56px;position:relative;overflow:hidden}
+.auth-left::before{content:'';position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:rgba(255,255,255,.06);border-radius:50%}
+.auth-left::after{content:'';position:absolute;bottom:-80px;left:-80px;width:320px;height:320px;background:rgba(255,255,255,.04);border-radius:50%}
+.auth-logo{display:flex;align-items:center;gap:12px;margin-bottom:40px;position:relative}
+.auth-logo .icon{width:52px;height:52px;background:rgba(255,255,255,.15);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.6rem}
+.auth-logo .name{font-size:1.8rem;font-weight:700;color:#fff}
+.auth-left h2{font-size:2rem;font-weight:700;color:#fff;line-height:1.3;margin-bottom:14px;position:relative}
+.auth-left p{color:rgba(255,255,255,.7);font-size:.95rem;line-height:1.7;position:relative;max-width:320px}
+.auth-right{background:#f8fafc;display:flex;align-items:center;justify-content:center;padding:48px 40px}
+.auth-box{width:100%;max-width:400px;background:#fff;border-radius:16px;padding:36px;box-shadow:var(--sh2)}
+.auth-box h3{font-size:1.3rem;font-weight:700;margin-bottom:6px}
+.auth-box p{font-size:.84rem;color:var(--ink3);margin-bottom:24px}
+.auth-link{font-size:.83rem;color:var(--ink3);text-align:center;margin-top:16px}
+.auth-link a{color:var(--blue);text-decoration:none;font-weight:600}
+.auth-divider{border:none;border-top:1px solid var(--border);margin:20px 0}
+
+/* ── UPLOAD ── */
+.upload-btn{display:flex;align-items:center;gap:8px;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;background:#fff;cursor:pointer;font-size:.85rem;color:var(--blue);font-weight:500;transition:border-color .2s;width:100%;position:relative}
+.upload-btn:hover{border-color:var(--blue)}
+.upload-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-btn.done{border-color:var(--success);color:var(--success)}
+
+/* ── APP LAYOUT ── */
+#app{display:none}
+#app.on{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+
+/* ── SIDEBAR ── */
+.sidebar{background:var(--sidebar);display:flex;flex-direction:column;min-height:100vh;position:sticky;top:0}
+.sb-logo{display:flex;align-items:center;gap:10px;padding:24px 20px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-logo .icon{width:38px;height:38px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+.sb-logo .name{font-size:1.1rem;font-weight:700;color:#fff}
+.sb-nav{padding:16px 12px;flex:1}
+.ni{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;font-size:.86rem;font-weight:500;color:var(--sidebar-text);transition:all .15s;border:none;background:none;width:100%;text-align:left;margin-bottom:2px}
+.ni:hover{background:rgba(255,255,255,.08);color:#fff}
+.ni.on{background:var(--blue);color:#fff;font-weight:600}
+.ni .ic{font-size:.95rem;width:18px;text-align:center;flex-shrink:0}
+.sb-footer{padding:16px 12px;border-top:1px solid rgba(255,255,255,.08)}
+.btn-logout{width:100%;padding:10px;background:#ba46c5;color:#fff;border:none;border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer;transition:background .2s}
+.btn-logout:hover{background:#c471cf}
+
+/* ── MAIN ── */
+.main-area{display:flex;flex-direction:column}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:flex-end;box-shadow:0 1px 0 var(--border);position:sticky;top:0;z-index:50}
+.user-chip{display:flex;align-items:center;gap:8px;font-size:.87rem;font-weight:500;color:var(--ink)}
+.user-icon{width:32px;height:32px;border-radius:50%;background:var(--blue-mid);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700}
+.content{padding:28px;flex:1;overflow-y:auto}
+.pg{display:none}.pg.on{display:block;animation:pgIn .22s ease}
+@keyframes pgIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.pg-title{font-size:1.4rem;font-weight:700;color:var(--ink);margin-bottom:20px}
+
+/* ── DASHBOARD ── */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.stat-card{background:#fff;border-radius:12px;padding:20px;border:1px solid var(--border);display:flex;flex-direction:column;align-items:flex-start}
+.stat-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:14px}
+.si-blue{background:var(--blue-mid)} .si-yellow{background:#fef3c7} .si-red{background:#fee2e2} .si-green{background:#dcfce7}
+.stat-val{font-size:1.8rem;font-weight:700;color:var(--ink);line-height:1}
+.stat-lbl{font-size:.78rem;color:var(--ink3);margin-top:4px}
+.welcome-bar{background:linear-gradient(135deg,var(--blue),var(--blue2));border-radius:12px;padding:22px 28px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between}
+.welcome-bar h2{font-size:1.2rem;font-weight:700;color:#fff}
+.welcome-bar p{font-size:.83rem;color:rgba(255,255,255,.75);margin-top:3px}
+.borrowed-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:14px}
+.bk-card{background:#fff;border-radius:10px;border:1px solid var(--border);overflow:hidden;text-align:center;padding:0 0 12px}
+.bk-cover{height:110px;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:2.5rem;margin-bottom:10px}
+.bk-title{font-size:.78rem;font-weight:600;color:var(--ink);padding:0 8px;line-height:1.3}
+.bk-author{font-size:.72rem;color:var(--ink3);padding:0 8px;margin-top:2px}
+
+/* ── SEARCH BOOKS ── */
+.search-bar-wrap{position:relative;margin-bottom:22px}
+.search-bar-wrap input{padding-left:40px;border-radius:10px;font-size:.9rem}
+.search-bar-wrap::before{content:'🔍';position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:.9rem;pointer-events:none}
+.books-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:18px}
+.book-card{background:#fff;border-radius:12px;border:1px solid var(--border);overflow:hidden;box-shadow:var(--sh);transition:transform .2s,box-shadow .2s}
+.book-card:hover{transform:translateY(-3px);box-shadow:var(--sh2)}
+.book-cover{height:150px;display:flex;align-items:center;justify-content:center;font-size:3rem;background:var(--blue-light);position:relative}
+.book-cover img{width:100%;height:100%;object-fit:cover}
+.book-body{padding:12px}
+.book-title{font-size:.83rem;font-weight:700;color:var(--ink);line-height:1.3;margin-bottom:2px}
+.book-author{font-size:.75rem;color:var(--ink3);margin-bottom:10px}
+.book-borrow-btn{width:100%;padding:8px;background:var(--blue);color:#fff;border:none;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;transition:background .15s}
+.book-borrow-btn:hover{background:var(--blue2)}
+.book-borrow-btn:disabled{background:var(--ink3);cursor:not-allowed}
+
+/* ── AVAILABILITY ── */
+.avail-table{background:#fff;border-radius:12px;overflow:hidden;border:1px solid var(--border)}
+.avail-table table{width:100%;border-collapse:collapse}
+.avail-table thead tr{background:var(--blue)}
+.avail-table th{padding:12px 16px;text-align:left;font-size:.78rem;font-weight:600;color:#fff;letter-spacing:.03em}
+.avail-table td{padding:14px 16px;border-bottom:1px solid var(--border);font-size:.85rem;vertical-align:middle}
+.avail-table tr:last-child td{border-bottom:none}
+.avail-table tr:hover td{background:var(--blue-light)}
+.avail-cover{width:44px;height:52px;border-radius:6px;object-fit:cover;background:var(--blue-mid);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
+
+/* ── MY BARCODE ── */
+.barcode-page{max-width:600px;margin:0 auto}
+.barcode-card{background:#fff;border-radius:16px;padding:32px;border:1px solid var(--border);box-shadow:var(--sh);text-align:center}
+.barcode-display{background:var(--blue-light);border-radius:12px;padding:32px 24px;margin:20px 0;border:1px solid var(--blue-mid)}
+.barcode-display h3{font-size:1.1rem;font-weight:700;margin-bottom:6px}
+.barcode-display p{font-size:.82rem;color:var(--ink3)}
+.barcode-svg{margin:16px auto;display:block}
+.scan-status{background:var(--blue-light);border:1px solid var(--blue-mid);border-radius:8px;padding:12px 16px;font-size:.83rem;color:var(--blue2);display:flex;align-items:center;gap:8px;margin-top:12px}
+.scanner-area{background:var(--blue-light);border-radius:12px;padding:20px;margin:20px 0;border:2px dashed var(--blue-mid);position:relative;overflow:hidden;min-height:200px;display:flex;align-items:center;justify-content:center}
+#scannerDiv video{width:100%;border-radius:8px;display:block}
+.scan-line{position:absolute;left:10%;right:10%;height:2px;background:var(--blue);animation:scanMove 2s ease-in-out infinite;box-shadow:0 0 8px var(--blue)}
+@keyframes scanMove{0%{top:20%}50%{top:80%}100%{top:20%}}
+.borrow-actions{display:flex;gap:12px;margin-top:20px}
+
+/* ── CART / UPDATE ── */
+.cart-item{background:#fff;border-radius:10px;border:1px solid var(--border);padding:16px;display:flex;align-items:center;gap:14px;margin-bottom:12px;box-shadow:var(--sh)}
+.cart-cover{width:60px;height:72px;border-radius:6px;background:var(--blue-mid);display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0;overflow:hidden}
+.cart-cover img{width:100%;height:100%;object-fit:cover}
+.cart-info{flex:1}
+.cart-title{font-size:.92rem;font-weight:700;color:var(--ink)}
+.cart-author{font-size:.78rem;color:var(--ink3);margin-top:2px}
+.cart-id{font-size:.75rem;color:var(--ink3);margin-top:4px;font-family:monospace}
+.cart-delete{background:none;border:none;cursor:pointer;color:var(--ink3);font-size:1.1rem;padding:6px;border-radius:6px;transition:color .15s}
+.cart-delete:hover{color:var(--danger)}
+.cart-footer{background:#fff;border-radius:10px;border:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px}
+.cart-hint{display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--ink3)}
+.empty-cart{text-align:center;padding:48px 20px;color:var(--ink3)}
+.empty-cart .icon{font-size:3rem;margin-bottom:12px}
+.cart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+
+/* ── MODAL ── */
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;align-items:center;justify-content:center}
+.mo.on{display:flex}
+.md{background:#fff;border-radius:14px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:var(--sh2);animation:mdIn .2s ease}
+@keyframes mdIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.mdH{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.mdT{font-size:1rem;font-weight:700}
+.mdX{background:none;border:none;font-size:1.1rem;cursor:pointer;color:var(--ink3);padding:4px 8px;border-radius:6px}
+.mdX:hover{background:var(--bg)}
+.mdB{padding:22px}
+.mdF{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+
+/* ── STEPS ── */
+.steps{display:flex;align-items:center;gap:6px;margin-bottom:20px}
+.step{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;border:2px solid var(--border);color:var(--ink3);flex-shrink:0;transition:all .2s}
+.step.done{background:#16a34a;border-color:#16a34a;color:#fff}
+.step.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.step-line{flex:1;height:2px;background:var(--border)}
+.step-line.done{background:#16a34a}
+
+@media(max-width:768px){
+  .auth-split{grid-template-columns:1fr}.auth-left{display:none}
+  #app.on{grid-template-columns:1fr}.sidebar{display:none}
+  .stat-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<div class="toast-box" id="toasts"></div>
+
+<!-- ═══ AUTH ═══ -->
+<div id="authPage">
+  <div class="auth-split">
+    <div class="auth-left">
+      <div class="auth-logo">
+        <div class="icon">📚</div>
+        <div class="name">Library Access Portal</div>
+      </div>
+      <h2>Your Gateway to Smart Learning</h2>
+      <p>Create your account and get instant access to thousands of books and resources.</p>
+    </div>
+    <div class="auth-right">
+      <!-- LOGIN BOX -->
+      <div class="auth-box" id="loginBox">
+        <h3>Login</h3>
+        <p>Access books easily. Borrow and return anytime.</p>
+        <form onsubmit="doLogin(event)">
+          <div class="fg"><label>Username</label><input type="email" id="lEmail" placeholder="Enter your username" required/></div>
+          <div class="fg"><label>Password</label><input type="password" id="lPass" placeholder="Enter your password" required/></div>
+          <div style="text-align:right;margin-bottom:14px"><a href="#" style="font-size:.8rem;color:var(--blue);text-decoration:none">Forget Password?</a></div>
+          <button class="btn btn-blue" type="submit">Login</button>
+        </form>
+        <div class="auth-link">Don't have an account? <a href="#" onclick="showRegister()">Register</a></div>
+        <div style="margin-top:12px;background:var(--blue-light);border-radius:8px;padding:10px 14px;font-size:.78rem;color:var(--blue2)">
+          Admin: <strong>admin@library.com</strong> / <strong>Admin@123</strong>
+        </div>
+      </div>
+
+      <!-- REGISTER BOX -->
+      <div class="auth-box" id="registerBox" style="display:none">
+        <h3>Register Account</h3>
+        <p>Fill in your details to create your account</p>
+        <div class="steps">
+          <div class="step active" id="s1">1</div><div class="step-line" id="sl1"></div>
+          <div class="step" id="s2">2</div><div class="step-line" id="sl2"></div>
+          <div class="step" id="s3">3</div>
+        </div>
+        <form onsubmit="doRegister(event)">
+          <div id="step1">
+            <div class="fg"><label>Full name</label><input type="text" id="rName" placeholder="Enter your full name" required/></div>
+            <div class="fg"><label>Date of Birth</label><input type="date" id="rDob"/></div>
+            <div class="fg"><label>NIC</label><input type="text" id="rNic" placeholder="Enter your NIC Number"/></div>
+            <div class="fg"><label>NIC Upload</label>
+              <div class="upload-btn" id="zFront"><span>+ Click to upload NIC front</span><input type="file" id="frontFile" accept="image/*" onchange="markUpload('zFront','frontFile','+ NIC front uploaded ✓')"/></div>
+              <div class="upload-btn" id="zBack" style="margin-top:8px"><span>+ Click to upload NIC back</span><input type="file" id="backFile" accept="image/*" onchange="markUpload('zBack','backFile','+ NIC back uploaded ✓')"/></div>
+            </div>
+            <div class="fg"><label>Email</label><input type="email" id="rEmail" placeholder="Enter your email" required/></div>
+            <div class="fg"><label>Password</label><input type="password" id="rPass" placeholder="Enter your password" required minlength="6"/></div>
+            <button class="btn btn-blue" type="submit">Register</button>
+          </div>
+        </form>
+        <div class="auth-link">Already have an account? <a href="#" onclick="showLogin()">Login</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app">
+  <div class="sidebar">
+    <div class="sb-logo">
+      <div class="icon">📚</div>
+      <div class="name">Library Access Portal</div>
+    </div>
+    <div class="sb-nav">
+      <button class="ni on" onclick="nav('dashboard',this)"><span class="ic">⊞</span> Dashboard</button>
+      <button class="ni" onclick="nav('search',this)"><span class="ic">⚡</span> Search Books</button>
+      <button class="ni" onclick="nav('availability',this)"><span class="ic">📋</span> Availability</button>
+      <button class="ni" onclick="nav('barcode',this)"><span class="ic">◎</span> My Barcode</button>
+      <button class="ni" onclick="nav('cart',this)" id="navCart"><span class="ic">⟳</span> Update <span id="cartCount" style="margin-left:auto;background:var(--blue);color:#fff;border-radius:999px;padding:1px 7px;font-size:.7rem" ></span></button>
+      <div id="adminNavs" style="display:none">
+        <div style="padding:12px 12px 4px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.35);margin-top:8px">Admin</div>
+        <button class="ni" onclick="nav('members',this)"><span class="ic">👥</span> Members</button>
+        <button class="ni" onclick="nav('allborrows',this)"><span class="ic">📄</span> All Borrows</button>
+      </div>
+    </div>
+    <div class="sb-footer">
+      <button class="btn-logout" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="main-area">
+    <div class="topbar">
+      <div class="user-chip">
+        <div class="user-icon" id="uAvatar">J</div>
+        <span id="uName">John Doe</span>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="pg on" id="pg-dashboard">
+        <div class="welcome-bar">
+          <div>
+            <h2>Welcome Back, <span id="dashName">John Doe</span>!</h2>
+            <p>Here's your library overview for today.</p>
+          </div>
+          <div style="font-size:2.5rem;opacity:.5">📚</div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-card"><div class="stat-icon si-blue">📖</div><div class="stat-val" id="stMyBorrowed">0</div><div class="stat-lbl">Currently Borrowed</div></div>
+          <div class="stat-card"><div class="stat-icon si-yellow">⏰</div><div class="stat-val" id="stDueWeek">0</div><div class="stat-lbl">Due this week</div></div>
+          <div class="stat-card"><div class="stat-icon si-red">⚠</div><div class="stat-val" id="stOverdue">0</div><div class="stat-lbl">Overdue Books</div></div>
+          <div class="stat-card"><div class="stat-icon si-green">📗</div><div class="stat-val" id="stAvailBooks">0</div><div class="stat-lbl">Available Books</div></div>
+        </div>
+        <div class="pg-title" style="font-size:1rem;margin-bottom:14px">My Borrowed Books</div>
+        <div class="borrowed-grid" id="myBorrowedGrid"></div>
+      </div>
+
+      <!-- SEARCH BOOKS -->
+      <div class="pg" id="pg-search">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+          <div class="pg-title" style="margin:0">Search Books</div>
+          <div class="user-chip"><div class="user-icon" id="sAvatar">J</div><span id="sName">John Doe</span></div>
+        </div>
+        <div class="search-bar-wrap">
+          <input type="text" id="bkSearch" placeholder="Search books..." oninput="renderSearch()"/>
+        </div>
+        <div class="books-grid" id="booksGrid"></div>
+      </div>
+
+      <!-- AVAILABILITY -->
+      <div class="pg" id="pg-availability">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+          <div class="pg-title" style="margin:0">Book Availability</div>
+          <div class="user-chip"><div class="user-icon">J</div><span id="avName">John Doe</span></div>
+        </div>
+        <div class="avail-table">
+          <table>
+            <thead><tr><th></th><th>Title</th><th>Author</th><th>Category</th><th>Total Copies</th><th>Available</th><th>Status</th></tr></thead>
+            <tbody id="availTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- MY BARCODE -->
+      <div class="pg" id="pg-barcode">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+          <div class="pg-title" style="margin:0">My Bar Code</div>
+          <div class="user-chip"><div class="user-icon">J</div><span id="bcName">John Doe</span></div>
+        </div>
+        <div class="barcode-card">
+          <div class="barcode-display">
+            <div class="scanner-area" id="scannerArea">
+              <div id="scannerDiv"></div>
+              <div class="scan-line" id="scanLine" style="display:none"></div>
+              <div id="scanIdle" style="text-align:center">
+                <div style="font-size:3rem;margin-bottom:12px">📷</div>
+                <div style="font-weight:600;margin-bottom:4px">Scan Barcode</div>
+                <div style="font-size:.82rem;color:var(--ink3)">Place the Barcode under the scanner to read</div>
+              </div>
+            </div>
+            <div class="scan-status">ℹ Scan the Book Barcode. The system will automatically process the book borrowing</div>
+          </div>
+          <div style="margin:16px 0">
+            <div class="fg"><label>Or enter barcode manually</label><input type="text" id="manualBc" placeholder="e.g. BC-000001" onkeydown="if(event.key==='Enter')lookupBc()"/></div>
+          </div>
+          <div class="borrow-actions">
+            <button class="btn btn-blue" style="flex:1" onclick="startBcScanner()">📷 Confirm Borrow</button>
+            <button class="btn btn-outline btn-sm" style="width:auto;padding:10px 20px" onclick="clearBcScan()">🗑 Clear</button>
+          </div>
+          <div id="bcResult" style="margin-top:16px"></div>
+        </div>
+      </div>
+
+      <!-- CART / UPDATE -->
+      <div class="pg" id="pg-cart">
+        <div class="cart-header">
+          <div class="pg-title" style="margin:0">Your Cart</div>
+          <button class="btn btn-outline btn-sm" onclick="clearCart()">Clear</button>
+        </div>
+        <div id="cartItems"></div>
+        <div class="cart-footer" id="cartFooter" style="display:none">
+          <div class="cart-hint">ℹ Review and confirm borrowing Books in your cart.</div>
+          <button class="btn btn-blue btn-sm" style="white-space:nowrap" onclick="confirmCart()">⟳ Confirm Borrow</button>
+        </div>
+      </div>
+
+      <!-- MEMBERS (admin) -->
+      <div class="pg" id="pg-members">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+          <div class="pg-title" style="margin:0">Members</div>
+          <button class="btn btn-blue btn-sm" onclick="open1('mAddMember')">+ Add Member</button>
+        </div>
+        <div class="avail-table">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Member ID</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="membersTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ALL BORROWS (admin) -->
+      <div class="pg" id="pg-allborrows">
+        <div class="pg-title">All Borrow Records</div>
+        <div class="avail-table">
+          <table>
+            <thead><tr><th>Member</th><th>Book</th><th>Borrowed</th><th>Due</th><th>Status</th><th>Fine</th><th></th></tr></thead>
+            <tbody id="allBorrowsTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Add Member -->
+<div class="mo" id="mAddMember">
+  <div class="md">
+    <div class="mdH"><div class="mdT">Add New Member</div><button class="mdX" onclick="close1('mAddMember')">✕</button></div>
+    <div class="mdB">
+      <div class="row2"><div class="fg"><label>Name</label><input id="mN"/></div><div class="fg"><label>Email</label><input type="email" id="mE"/></div></div>
+      <div class="row2"><div class="fg"><label>Password</label><input type="password" id="mP"/></div><div class="fg"><label>Role</label><select id="mRo"><option>USER</option><option>LIBRARIAN</option><option>ADMIN</option></select></div></div>
+      <div class="fg"><label>Member ID</label><input id="mMid" placeholder="STU-001"/></div>
+    </div>
+    <div class="mdF"><button class="btn btn-outline btn-sm" onclick="close1('mAddMember')">Cancel</button><button class="btn btn-blue btn-sm" onclick="addMember()">Add</button></div>
+  </div>
+</div>
+
+<!-- MODAL: Borrow confirm -->
+<div class="mo" id="mConfirm">
+  <div class="md">
+    <div class="mdH"><div class="mdT">Confirm Borrow</div><button class="mdX" onclick="close1('mConfirm')">✕</button></div>
+    <div class="mdB">
+      <p style="font-size:.88rem;color:var(--ink2);margin-bottom:16px">Confirm borrowing this book?</p>
+      <div id="mConfirmBook"></div>
+    </div>
+    <div class="mdF"><button class="btn btn-outline btn-sm" onclick="close1('mConfirm')">Cancel</button><button class="btn btn-blue btn-sm" onclick="confirmBorrow()">✓ Confirm</button></div>
+  </div>
+</div>
+
+<script>
+const API='http://localhost:8080/api';
+let TOKEN=localStorage.getItem('lms_tok')||'';
+let ME=JSON.parse(localStorage.getItem('lms_me')||'null');
+let BOOKS=[],MEMBERS=[],BORROWS=[],MY_BORROWS=[];
+let CART=[]; // books to borrow
+let PENDING_BOOK=null;
+let scannerOn=false;
+
+// ── utils ─────────────────────────────────────────────────
+function toast(msg,t='ts'){
+  const d=document.createElement('div');d.className='toast '+t;d.textContent=msg;
+  document.getElementById('toasts').appendChild(d);setTimeout(()=>d.remove(),3500);
+}
+function open1(id){document.getElementById(id).classList.add('on');}
+function close1(id){document.getElementById(id).classList.remove('on');}
+document.querySelectorAll('.mo').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('on')}));
+
+async function api(path,method='GET',body=null){
+  const h={'Content-Type':'application/json'};
+  if(TOKEN) h['Authorization']='Bearer '+TOKEN;
+  const r=await fetch(API+path,{method,headers:h,body:body?JSON.stringify(body):null});
+  if(r.status===204) return null;
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(d.message||'Request failed');
+  return d;
+}
+async function apiForm(path,fd){
+  const h={};if(TOKEN) h['Authorization']='Bearer '+TOKEN;
+  const r=await fetch(API+path,{method:'POST',headers:h,body:fd});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(d.message||'Upload failed');
+  return d;
+}
+function markUpload(zoneId,fileId,label){
+  const f=document.getElementById(fileId).files[0];
+  if(!f) return;
+  const z=document.getElementById(zoneId);
+  z.querySelector('span').textContent=label;
+  z.classList.add('done');
+}
+
+// ── AUTH SCREENS ──────────────────────────────────────────
+function showRegister(){ document.getElementById('loginBox').style.display='none'; document.getElementById('registerBox').style.display='block'; }
+function showLogin(){ document.getElementById('registerBox').style.display='none'; document.getElementById('loginBox').style.display='block'; }
+
+async function doLogin(e){
+  e.preventDefault();
+  try{
+    const d=await api('/auth/login','POST',{email:document.getElementById('lEmail').value,password:document.getElementById('lPass').value});
+    loginSuccess(d);
+  }catch(err){toast(err.message,'te');}
+}
+
+async function doRegister(e){
+  e.preventDefault();
+  try{
+    const created=await api('/auth/register','POST',{
+      name:document.getElementById('rName').value,
+      email:document.getElementById('rEmail').value,
+      password:document.getElementById('rPass').value,
+      memberIdNumber:document.getElementById('rNic').value,
+    });
+    const ff=document.getElementById('frontFile').files[0];
+    const bf=document.getElementById('backFile').files[0];
+    if(ff&&bf){
+      const fd=new FormData();fd.append('memberId',created.id);fd.append('front',ff);fd.append('back',bf);
+      await apiForm('/auth/upload-id',fd);
+    }
+    const logged=await api('/auth/login','POST',{email:document.getElementById('rEmail').value,password:document.getElementById('rPass').value});
+    toast('Account created!');loginSuccess(logged);
+  }catch(err){toast(err.message,'te');}
+}
+
+async function doLogout(){
+  stopScanner();
+  try{await api('/auth/logout','POST');}catch(_){}
+  TOKEN='';ME=null;CART=[];
+  localStorage.removeItem('lms_tok');localStorage.removeItem('lms_me');
+  document.getElementById('app').classList.remove('on');
+  document.getElementById('authPage').classList.add('on');
+}
+
+function loginSuccess(d){
+  TOKEN=d.token||TOKEN;ME=d;
+  localStorage.setItem('lms_tok',TOKEN);
+  localStorage.setItem('lms_me',JSON.stringify(d));
+  document.getElementById('authPage').classList.remove('on');
+  document.getElementById('app').classList.add('on');
+  const name=d.name||'User';
+  ['uName','sName','avName','bcName','dashName'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=name;});
+  ['uAvatar','sAvatar'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=name[0].toUpperCase();});
+  const isAdmin=d.role==='ADMIN'||d.role==='LIBRARIAN';
+  if(isAdmin) document.getElementById('adminNavs').style.display='block';
+  loadAll();
+}
+
+// ── NAV ───────────────────────────────────────────────────
+function nav(name,el){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
+  document.getElementById('pg-'+name).classList.add('on');
+  el.classList.add('on');
+  if(name!=='barcode') stopScanner();
+  if(name==='cart') renderCart();
+  if(name==='allborrows') renderAllBorrows();
+  if(name==='members') renderMembers();
+}
+
+// ── LOAD DATA ─────────────────────────────────────────────
+async function loadAll(){
+  try{BOOKS=await api('/books');}catch(_){BOOKS=[];}
+  try{
+    const allB=await api('/borrow/member/'+ME.id);
+    MY_BORROWS=allB;
+    BORROWS=allB;
+  }catch(_){MY_BORROWS=[];BORROWS=[];}
+  if(ME?.role==='ADMIN'||ME?.role==='LIBRARIAN'){
+    try{MEMBERS=await api('/members');}catch(_){MEMBERS=[];}
+    try{BORROWS=await api('/borrow');}catch(_){}
+  }
+  renderDash();renderSearch();renderAvail();
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────
+function renderDash(){
+  const active=MY_BORROWS.filter(b=>b.status==='BORROWED'||b.status==='OVERDUE');
+  const overdue=MY_BORROWS.filter(b=>b.status==='OVERDUE');
+  const dueWeek=MY_BORROWS.filter(b=>{
+    if(b.status!=='BORROWED') return false;
+    const dd=new Date(b.dueDate);const now=new Date();
+    return (dd-now)<7*24*60*60*1000&&dd>now;
+  });
+  document.getElementById('stMyBorrowed').textContent=active.length;
+  document.getElementById('stDueWeek').textContent=dueWeek.length;
+  document.getElementById('stOverdue').textContent=overdue.length;
+  document.getElementById('stAvailBooks').textContent=BOOKS.filter(b=>b.availableQuantity>0).length;
+  const grid=document.getElementById('myBorrowedGrid');
+  const activeBorrows=MY_BORROWS.filter(b=>b.status==='BORROWED'||b.status==='OVERDUE');
+  if(!activeBorrows.length){
+    grid.innerHTML='<div style="color:var(--ink3);font-size:.87rem">No books currently borrowed.</div>';
+    return;
+  }
+  grid.innerHTML=activeBorrows.map(b=>`
+    <div class="bk-card">
+      <div class="bk-cover">${bookEmoji(b.book?.id||0)}</div>
+      <div class="bk-title">${b.book?.title||'—'}</div>
+      <div class="bk-author">${b.book?.author||'—'}</div>
+    </div>`).join('');
+}
+
+// ── SEARCH BOOKS ──────────────────────────────────────────
+const EMOJIS=['📖','📗','📘','📙','📕','📓','📔','📒','🔬','🧮','🌍','✏️'];
+function bookEmoji(id){return EMOJIS[id%EMOJIS.length];}
+
+function renderSearch(){
+  const q=(document.getElementById('bkSearch')?.value||'').toLowerCase();
+  const f=BOOKS.filter(b=>!q||b.title.toLowerCase().includes(q)||b.author.toLowerCase().includes(q)||(b.isbn||'').includes(q));
+  document.getElementById('booksGrid').innerHTML=f.map(b=>`
+    <div class="book-card">
+      <div class="book-cover">${bookEmoji(b.id)}</div>
+      <div class="book-body">
+        <div class="book-title">${b.title}</div>
+        <div class="book-author">${b.author}</div>
+        <button class="book-borrow-btn" ${b.availableQuantity<=0?'disabled':''} onclick="addToCart(${b.id})">
+          ${b.availableQuantity>0?'Borrow':'Out of Stock'}
+        </button>
+      </div>
+    </div>`).join('');
+}
+
+// ── AVAILABILITY ──────────────────────────────────────────
+function renderAvail(){
+  document.getElementById('availTable').innerHTML=BOOKS.map(b=>`
+    <tr>
+      <td><div class="avail-cover">${bookEmoji(b.id)}</div></td>
+      <td><strong>${b.title}</strong></td>
+      <td>${b.author}</td>
+      <td><span class="badge b-blue">${b.category||'—'}</span></td>
+      <td style="text-align:center;font-weight:600">${b.quantity}</td>
+      <td style="text-align:center;font-weight:700;color:${b.availableQuantity>0?'var(--success)':'var(--danger)'}">${b.availableQuantity}</td>
+      <td>${b.availableQuantity>0?'<span class="badge b-green">Available</span>':'<span class="badge b-red">Out of Stock</span>'}</td>
+    </tr>`).join('');
+}
+
+// ── CART ──────────────────────────────────────────────────
+function addToCart(bookId){
+  const book=BOOKS.find(b=>b.id===bookId);if(!book) return;
+  if(CART.find(b=>b.id===bookId)) return toast('Already in cart','ti');
+  if(book.availableQuantity<=0) return toast('Not available','te');
+  CART.push(book);
+  updateCartCount();
+  toast(`"${book.title}" added to cart`,'ts');
+}
+
+function updateCartCount(){
+  const el=document.getElementById('cartCount');
+  el.textContent=CART.length>0?CART.length:'';
+}
+
+function renderCart(){
+  const container=document.getElementById('cartItems');
+  const footer=document.getElementById('cartFooter');
+  if(!CART.length){
+    container.innerHTML='<div class="empty-cart"><div class="icon">🛒</div><div style="font-weight:600;margin-bottom:6px">Your cart is empty</div><div style="font-size:.84rem;color:var(--ink3)">Add books from Search Books to borrow them</div></div>';
+    footer.style.display='none';return;
+  }
+  container.innerHTML=CART.map((b,i)=>`
+    <div class="cart-item">
+      <div class="cart-cover">${bookEmoji(b.id)}</div>
+      <div class="cart-info">
+        <div class="cart-title">${b.title}</div>
+        <div class="cart-author">${b.author}</div>
+        <div class="cart-id">${b.barcodeValue||b.isbn||'—'}</div>
+      </div>
+      <button class="cart-delete" onclick="removeFromCart(${i})">🗑</button>
+    </div>`).join('');
+  footer.style.display='flex';
+}
+
+function removeFromCart(i){
+  CART.splice(i,1);updateCartCount();renderCart();
+}
+function clearCart(){CART=[];updateCartCount();renderCart();}
+
+async function confirmCart(){
+  if(!CART.length) return toast('Cart is empty','te');
+  let success=0,fail=0;
+  for(const book of CART){
+    try{
+      await api(`/borrow/borrow?memberId=${ME.id}&bookId=${book.id}`,'POST');
+      book.availableQuantity--;success++;
+    }catch(e){fail++;toast(`Failed: ${book.title} — ${e.message}`,'te');}
+  }
+  if(success>0){
+    toast(`${success} book(s) borrowed successfully!`,'ts');
+    CART=[];updateCartCount();
+    await loadAll();renderCart();
+  }
+}
+
+// ── BARCODE SCANNER ───────────────────────────────────────
+function startBcScanner(){
+  if(scannerOn) return;
+  scannerOn=true;
+  document.getElementById('scanIdle').style.display='none';
+  document.getElementById('scanLine').style.display='block';
+  Quagga.init({
+    inputStream:{name:'Live',type:'LiveStream',target:document.getElementById('scannerDiv'),constraints:{width:560,height:200,facingMode:'environment'}},
+    decoder:{readers:['code_128_reader','ean_reader','code_39_reader']}
+  },function(err){
+    if(err){toast('Camera not available. Use manual entry.','te');stopScanner();return;}
+    Quagga.start();
+  });
+  Quagga.onDetected(function(data){
+    const code=data.codeResult.code;
+    if(code){stopScanner();document.getElementById('manualBc').value=code;lookupBc();}
+  });
+}
+
+function stopScanner(){
+  if(!scannerOn)return;scannerOn=false;
+  try{Quagga.stop();}catch(_){}
+  document.getElementById('scanIdle').style.display='block';
+  document.getElementById('scanLine').style.display='none';
+  document.getElementById('scannerDiv').innerHTML='';
+}
+
+function clearBcScan(){
+  stopScanner();
+  document.getElementById('manualBc').value='';
+  document.getElementById('bcResult').innerHTML='';
+  PENDING_BOOK=null;
+}
+
+async function lookupBc(){
+  const code=document.getElementById('manualBc').value.trim();
+  if(!code) return;
+  try{
+    const book=await api('/borrow/scan/'+encodeURIComponent(code));
+    PENDING_BOOK=book;
+    document.getElementById('bcResult').innerHTML=`
+      <div class="cart-item" style="margin-bottom:12px">
+        <div class="cart-cover">${bookEmoji(book.id)}</div>
+        <div class="cart-info">
+          <div class="cart-title">${book.title}</div>
+          <div class="cart-author">${book.author}</div>
+          <div class="cart-id">${book.barcodeValue||'—'}</div>
+        </div>
+        <span class="badge ${book.availableQuantity>0?'b-green':'b-red'}">${book.availableQuantity>0?'Available':'Out'}</span>
+      </div>
+      ${book.availableQuantity>0?`<button class="btn btn-blue" onclick="borrowScanned()">✓ Borrow This Book</button>`:'<div style="color:var(--danger);font-size:.85rem;font-weight:600">This book is not available.</div>'}`;
+    toast('Book found: '+book.title,'ti');
+  }catch(e){
+    document.getElementById('bcResult').innerHTML=`<div style="color:var(--danger);font-size:.85rem;padding:12px;background:#fee2e2;border-radius:8px">❌ ${e.message}</div>`;
+    PENDING_BOOK=null;
+  }
+}
+
+async function borrowScanned(){
+  if(!PENDING_BOOK) return;
+  try{
+    await api(`/borrow/borrow?memberId=${ME.id}&bookId=${PENDING_BOOK.id}`,'POST');
+    PENDING_BOOK.availableQuantity--;
+    toast('Book borrowed successfully!','ts');
+    clearBcScan();await loadAll();
+  }catch(e){toast(e.message,'te');}
+}
+
+// ── ALL BORROWS (admin) ───────────────────────────────────
+function renderAllBorrows(){
+  document.getElementById('allBorrowsTable').innerHTML=BORROWS.map(b=>`
+    <tr>
+      <td>${b.member?.name||'—'}</td>
+      <td>${b.book?.title||'—'}</td>
+      <td style="font-size:.8rem;font-family:monospace">${b.borrowDate||'—'}</td>
+      <td style="font-size:.8rem;font-family:monospace">${b.dueDate||'—'}</td>
+      <td>${stBadge(b.status)}</td>
+      <td>${b.fineAmount>0?`<span style="color:var(--danger);font-weight:600">Rs.${b.fineAmount}</span>`:'—'}</td>
+      <td>${b.status!=='RETURNED'?`<button class="btn btn-success btn-sm" onclick="returnBook(${b.id})">Return</button>`:''}</td>
+    </tr>`).join('');
+}
+
+async function returnBook(id){
+  try{
+    await api(`/borrow/${id}/return`,'PATCH');
+    toast('Book returned!');await loadAll();renderAllBorrows();
+  }catch(e){toast(e.message,'te');}
+}
+
+// ── MEMBERS ───────────────────────────────────────────────
+function renderMembers(){
+  document.getElementById('membersTable').innerHTML=MEMBERS.map(m=>`
+    <tr>
+      <td><strong>${m.name}</strong></td>
+      <td style="font-size:.82rem;color:var(--ink3)">${m.email}</td>
+      <td style="font-family:monospace;font-size:.8rem">${m.memberIdNumber||'—'}</td>
+      <td>${roleBadge(m.role)}</td>
+      <td>${m.active?'<span class="badge b-green">Active</span>':'<span class="badge b-red">Inactive</span>'}</td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-outline btn-sm" onclick="toggleM(${m.id})">${m.active?'Deactivate':'Activate'}</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteM(${m.id})">Del</button>
+      </td>
+    </tr>`).join('');
+}
+
+async function addMember(){
+  try{
+    const d=await api('/auth/register','POST',{name:document.getElementById('mN').value,email:document.getElementById('mE').value,password:document.getElementById('mP').value,memberIdNumber:document.getElementById('mMid').value});
+    MEMBERS.unshift({...d,active:true,createdAt:new Date().toISOString()});
+    renderMembers();close1('mAddMember');toast('Member added!');
+  }catch(e){toast(e.message,'te');}
+}
+async function toggleM(id){
+  try{const d=await api('/members/'+id+'/toggle-status','PATCH');const i=MEMBERS.findIndex(m=>m.id===id);if(i>-1)MEMBERS[i]=d;renderMembers();}
+  catch(e){toast(e.message,'te');}
+}
+async function deleteM(id){
+  if(!confirm('Delete?'))return;
+  try{await api('/members/'+id,'DELETE');MEMBERS=MEMBERS.filter(m=>m.id!==id);renderMembers();toast('Deleted.');}
+  catch(e){toast(e.message,'te');}
+}
+
+// ── HELPERS ───────────────────────────────────────────────
+function stBadge(s){
+  const m={BORROWED:'b-blue',RETURNED:'b-green',OVERDUE:'b-red',LOST:'b-gray'};
+  return `<span class="badge ${m[s]||'b-gray'}">${s}</span>`;
+}
+function roleBadge(r){
+  const m={ADMIN:'b-red',LIBRARIAN:'b-blue',USER:'b-gray'};
+  return `<span class="badge ${m[r]||'b-gray'}">${r}</span>`;
+}
+
+window.addEventListener('load',()=>{
+  if(ME&&TOKEN){loginSuccess(ME);}
+  else{document.getElementById('authPage').classList.add('on');}
+});
+</script>
+</body>
+</html>
