@@ -18,4 +18,4 @@ Project Structure & Key Components
 
 Technologies
 
-ava • Spring Boot • Spring Security • JWT • Spring Data JPA • Maven • SQL • REST API • HTML/CSS/JavaScript
+• java • Spring Boot • Spring Security • JWT • Spring Data JPA • Maven • SQL • REST API • HTML/CSS/JavaScript
